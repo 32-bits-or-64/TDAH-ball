@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Extreme Physics Ball - 86 Langs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+    <div id="game-container"></div>
+    
+    <div id="ui-container">
+        <div class="glass-panel">
+            <div class="control-group">
+                <label id="lbl-lang">Language</label>
+                <select id="langSelect"></select>
+            </div>
+            <h3 id="ui-title">Physics Engine</h3>
+            <div class="control-group">
+                <label id="lbl-gravity">Gravity</label>
+                <input type="range" id="gravityRange" min="-2" max="5" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label id="lbl-bounce">Restitution (Bounce)</label>
+                <input type="range" id="bounceRange" min="0" max="1.5" step="0.05" value="0.9">
+            </div>
+            <div class="stats"><span id="lbl-speed">Velocity</span>: <span id="speedVal">0</span> m/s</div>
+            <button id="resetBtn">Reset System</button>
+        </div>
+    </div>
+    <div id="glow"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="languages.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
