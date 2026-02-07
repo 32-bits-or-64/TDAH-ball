@@ -31,7 +31,7 @@ window.onload = () => {
         const s = 60;
         for (let y = 0; y < bgCanvas.height; y += s) {
             for (let x = 0; x < bgCanvas.width; x += s) {
-                bgCtx.fillstyle '#111111';
+                bgCtx.fillstyle '#111111' : '#111111';
                 bgCtx.fillRect(x, y, s, s);
             }
         }
@@ -130,6 +130,7 @@ window.onload = () => {
     Render.run(render);
     Runner.run(Runner.create(), engine);
 };
+
 
 
 
