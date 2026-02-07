@@ -44,7 +44,7 @@ window.onload = () => {
     const render = Render.create({
         element: document.getElementById('game-container'),
         engine: engine,
-        options: { width: window.innerWidth, height: window.innerHeight, wireframes: false, background: 'transparent' }
+        options: { width: window.innerWidth, height: window.innerHeight, wireframes: false, background: 'color' }
     });
 
     // BOLA CON TEXTURA 2X2
@@ -126,10 +126,11 @@ window.onload = () => {
         Body.setAngularVelocity(ball, 0);
     };
 
-    setLanguage('es');
+    setLanguage('en');
     Render.run(render);
     Runner.run(Runner.create(), engine);
 };
+
 
 
 
