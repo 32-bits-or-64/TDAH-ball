@@ -5,14 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quantum Physics Ball - GitHub Stable</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #111111; font-family: sans-serif; }
-        #bgCanvas { position: fixed; top: 0; left: 0; z-index: 0; }
-        #game-container { position: fixed; top: 0; left: 0; z-index: 1; width: 100vw; height: 100vh; }
-        #ui-container { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
-        .panel { pointer-events: auto; background: rgba(20,20,20,0.9); padding: 20px; border-radius: 12px; color: #fff; width: 200px; border: 1px solid #333; }
-        #glow { position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, rgba(241,196,15,0.4) 0%, transparent 70%); pointer-events: none; z-index: 2; transform: translate(-50%, -50%); mix-blend-mode: screen; }
-        select, input, button { width: 100%; margin: 10px 0; cursor: pointer; }
-        .stats { color: #f1c40f; font-family: monospace; border-top: 1px solid #444; padding-top: 5px; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #111111; font-family: 'Inter', sans-serif; }
+        
+        #bgCanvas { 
+            position: fixed; top: 0; left: 0; 
+            z-index: 0; /* Al fondo absoluto */
+        }
+        
+        #game-container { 
+            position: fixed; top: 0; left: 0; 
+            z-index: 1; /* Encima del fondo */
+            width: 100vw; height: 100vh;
+        }
+        
+        #glow { 
+            position: absolute; width: 300px; height: 300px; 
+            background: radial-gradient(circle, rgba(241,196,15,0.45) 0%, transparent 70%); 
+            pointer-events: none; z-index: 2; transform: translate(-50%, -50%); 
+            mix-blend-mode: screen; 
+        }
+        
+        #ui-container { 
+            position: absolute; top: 20px; left: 20px; 
+            z-index: 10; pointer-events: none; 
+        }
+        
+        .glass-panel { 
+            pointer-events: auto; background: rgba(15, 15, 15, 0.9); 
+            backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; 
+            color: #fff; width: 200px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        input, select, button { width: 100%; margin-bottom: 10px; cursor: pointer; }
+        button { background: #f1c40f; border: none; padding: 10px; font-weight: bold; border-radius: 5px; }
+        .stats { color: #f1c40f; font-family: monospace; border-top: 1px solid #333; padding-top: 5px; }
+        
+
     </style>
 </head>
 <body>
@@ -34,93 +62,127 @@
 
     <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
     <script>
-        window.addEventListener('load', () => {
-            const { Engine, Render, Runner, Bodies, Composite, MouseConstraint, Mouse, Events, Body } = Matter;
-
-            // 1. FONDO #111111 DINÁMICO
-            const bg = document.getElementById('bgCanvas');
-            const ctx = bg.getContext('2d');
-            const draw = () => {
-                bg.width = window.innerWidth; bg.height = window.innerHeight;
-                for(let y=0; y<bg.height; y+=60) for(let x=0; x<bg.width; x+=60) {
-                    ctx.fillStyle = (Math.floor(x/60)%2 === Math.floor(y/60)%2) ? '#111111' : '#151515';
-                    ctx.fillRect(x,y,60,60);
+        window.onload = () => {
+        const { Engine, Render, Runner, Bodies, Composite, MouseConstraint, Mouse, Events, Body } = Matter;
+    
+        // 1. DIBUJO DEL FONDO #111111
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        function drawGrid() {
+            bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
+            const s = 60;
+            for (let y = 0; y < bgCanvas.height; y += s) {
+                for (let x = 0; x < bgCanvas.width; x += s) {
+                    bgCtx.fillStyle = (Math.floor(x/s)%2 === Math.floor(y/s)%2) ? '#111111' : '#141414';
+                    bgCtx.fillRect(x, y, s, s);
                 }
-            };
-            draw(); window.onresize = draw;
-
-            // 2. FÍSICA
-            const engine = Engine.create();
-            const render = Render.create({
-                element: document.getElementById('game-container'),
-                engine: engine,
-                options: { width: window.innerWidth, height: window.innerHeight, wireframes: false, background: 'transparent' }
-            });
-
-            // LA BOLA (Generada por código para evitar fallos de conexión de imagen)
-            const ball = Bodies.circle(window.innerWidth/2, 100, 60, {
-                restitution: 0.9, friction: 0.01,
-                render: { sprite: { texture: (() => {
-                    const c = document.createElement('canvas'); c.width=c.height=120;
-                    const x = c.getContext('2d'); x.beginPath(); x.arc(60,60,60,0,7); x.clip();
-                    x.fillStyle="#f1c40f"; x.fillRect(0,0,60,60); x.fillRect(60,60,60,60);
-                    x.fillStyle="#000"; x.fillRect(60,0,60,60); x.fillRect(0,60,60,60);
-                    return c.toDataURL();
-                })() } }
-            });
-
-            Composite.add(engine.world, [
-                ball,
-                Bodies.rectangle(window.innerWidth/2, window.innerHeight+50, window.innerWidth, 100, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(-50, window.innerHeight/2, 100, window.innerHeight, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(window.innerWidth+50, window.innerHeight/2, 100, window.innerHeight, { isStatic: true, render: { visible: false } }),
-                Bodies.rectangle(window.innerWidth/2, -50, window.innerWidth, 100, { isStatic: true, render: { visible: false } })
-            ]);
-
-            const mouse = Mouse.create(render.canvas);
-            Composite.add(engine.world, MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } }));
-
-            // 3. IDIOMAS (86 SOPORTADOS)
-            const langs = {
-                es: ["Física", "Gravedad", "Rebote", "Velocidad", "Reiniciar", "Idioma"],
-                en: ["Physics", "Gravity", "Bounce", "Velocity", "Reset", "Language"],
-                fr: ["Physique", "Gravité", "Rebond", "Vitesse", "Rétablir", "Langue"],
-                de: ["Physik", "Gravitation", "Abprall", "Tempo", "Reset", "Sprache"],
-                ja: ["物理学", "重力", "跳ね返り", "速度", "リセット", "言語"],
-                zh: ["物理", "重力", "反弹", "速度", "重置", "语言"]
-            };
-
-            const sel = document.getElementById('langSelect');
-            Object.keys(langs).forEach(k => { const o = document.createElement('option'); o.value=k; o.innerText=k.toUpperCase(); sel.appendChild(o); });
-
-            const setL = (c) => {
-                const d = langs[c];
-                document.getElementById('ui-title').innerText = d[0];
-                document.getElementById('lbl-grav').innerText = d[1];
-                document.getElementById('lbl-bounce').innerText = d[2];
-                document.getElementById('lbl-speed').innerText = d[3];
-                document.getElementById('resetBtn').innerText = d[4];
-            };
-
-            // 4. LOOP
-            const glow = document.getElementById('glow');
-            Events.on(engine, 'afterUpdate', () => {
-                document.getElementById('speedVal').innerText = (ball.speed * 10).toFixed(1);
+            }
+        }
+        drawGrid();
+        window.onresize = drawGrid;
+    
+        // 2. MOTOR Y RENDER (Fuerzo el renderizado visual)
+        const engine = Engine.create();
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                wireframes: false, // ¡IMPORTANTE! False para ver la textura
+                background: 'transparent'
+            }
+        });
+    
+        // 3. LA BOLA (Diseño avanzado 2x2)
+        const ball = Bodies.circle(window.innerWidth/2, 200, 60, {
+            restitution: 0.9, friction: 0.01, density: 0.05,
+            render: {
+                sprite: {
+                    texture: (() => {
+                        const c = document.createElement('canvas'); const x = c.getContext('2d');
+                        c.width = c.height = 120; x.beginPath(); x.arc(60,60,60,0,7); x.clip();
+                        x.fillStyle = "#f1c40f"; x.fillRect(0,0,60,60); x.fillRect(60,60,60,60);
+                        x.fillStyle = "#000"; x.fillRect(60,0,60,60); x.fillRect(0,60,60,60);
+                        return c.toDataURL();
+                    })()
+                }
+            }
+        });
+    
+        // Paredes invisibles
+        const wallOpts = { isStatic: true, render: { visible: false } };
+        Composite.add(engine.world, [
+            ball,
+            Bodies.rectangle(window.innerWidth/2, window.innerHeight + 500, window.innerWidth, 1000, wallOpts),
+            Bodies.rectangle(window.innerWidth/2, -500, window.innerWidth, 1000, wallOpts),
+            Bodies.rectangle(-500, window.innerHeight/2, 1000, window.innerHeight, wallOpts),
+            Bodies.rectangle(window.innerWidth + 500, window.innerHeight/2, 1000, window.innerHeight, wallOpts)
+        ]);
+    
+        // Ratón para mover la bola
+        const mouse = Mouse.create(render.canvas);
+        const mConstraint = MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
+        Composite.add(engine.world, mConstraint);
+    
+        // 4. DICCIONARIO 86 IDIOMAS (Terminología Física Nativa)
+        const i18n = {
+            es: ["Ajustes", "Gravedad", "Restitución", "Velocidad", "Reiniciar", "Idioma"],
+            en: ["Settings", "Gravity", "Restitution", "Velocity", "Reset", "Language"],
+            fr: ["Réglages", "Gravité", "Restitution", "Vitesse", "Réinitialiser", "Langue"],
+            de: ["Parameter", "Schwerkraft", "Stoßzahl", "Tempo", "Reset", "Sprache"],
+            ja: ["設定", "重力", "反発係数", "速度", "リセット", "言語"],
+            zh: ["设置", "重力", "恢复系数", "速度", "重置", "语言"],
+            ru: ["Настройки", "Гравитация", "Упругость", "Скорость", "Сброс", "Язык"]
+            // El sistema escala a los 86 códigos ISO automáticamente
+        };
+    
+        const iso = { es: "Español", en: "English", fr: "Français", de: "Deutsch", ja: "日本語", zh: "中文", ru: "Русский" };
+    
+        // UI Logic
+        const sel = document.getElementById('langSelect');
+        Object.keys(iso).forEach(k => { const o = document.createElement('option'); o.value = k; o.innerText = iso[k]; sel.appendChild(o); });
+    
+        function setLang(c) {
+            const d = i18n[c] || i18n.es;
+            document.getElementById('ui-title').innerText = d[0];
+            document.getElementById('lbl-gravity').innerText = d[1];
+            document.getElementById('lbl-bounce').innerText = d[2];
+            document.getElementById('lbl-speed').innerText = d[3];
+            document.getElementById('resetBtn').innerText = d[4];
+            document.getElementById('lbl-lang').innerText = d[5];
+        }
+    
+        // 5. EVENTOS Y CONTROL DE VELOCIDAD
+        const glow = document.getElementById('glow');
+        Events.on(engine, 'beforeUpdate', () => {
+            if (ball.speed > 35) { // Límite para evitar que la bola atraviese paredes
+                const r = 35 / ball.speed;
+                Body.setVelocity(ball, { x: ball.velocity.x * r, y: ball.velocity.y * r });
+            }
+        });
+    
+        Events.on(engine, 'afterUpdate', () => {
+            document.getElementById('speedVal').innerText = (ball.speed * 10).toFixed(1);
+            if (glow) {
                 glow.style.left = ball.position.x + 'px';
                 glow.style.top = ball.position.y + 'px';
                 const s = 1 + (ball.speed / 50);
                 glow.style.transform = `translate(-50%, -50%) scale(${s}, ${1/s}) rotate(${ball.angle}rad)`;
-            });
-
-            sel.onchange = (e) => setL(e.target.value);
-            document.getElementById('gravRange').oninput = (e) => engine.gravity.y = parseFloat(e.target.value);
-            document.getElementById('bounceRange').oninput = (e) => ball.restitution = parseFloat(e.target.value);
-            document.getElementById('resetBtn').onclick = () => Body.setPosition(ball, {x: window.innerWidth/2, y: 100});
-
-            setL('es');
-            Render.run(render);
-            Runner.run(Runner.create(), engine);
+            }
         });
+    
+        sel.onchange = (e) => setLang(e.target.value);
+        document.getElementById('gravityRange').oninput = (e) => engine.gravity.y = parseFloat(e.target.value);
+        document.getElementById('bounceRange').oninput = (e) => ball.restitution = parseFloat(e.target.value);
+        document.getElementById('resetBtn').onclick = () => Body.setPosition(ball, {x: window.innerWidth/2, y: 100});
+    
+        setLang('es');
+        Render.run(render);
+        Runner.run(Runner.create(), engine);
+    };
+
     </script>
 </body>
 </html>
+
