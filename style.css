@@ -1,4 +1,4 @@
-body { margin: 0; padding: 0; overflow: hidden; background: #111; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { margin: 0; padding: 0; overflow: hidden; background: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 #bgCanvas { position: fixed; top: 0; left: 0; z-index: 1; }
 #game-container { position: fixed; top: 0; left: 0; z-index: 2; pointer-events: none; }
 #game-container canvas { pointer-events: auto; }
@@ -25,4 +25,5 @@ button {
 }
 button:hover { background: #fff; transform: translateY(-2px); }
 .stats { font-family: 'Courier New', monospace; font-size: 14px; color: #f1c40f; border-top: 1px solid #333; padding-top: 10px; }
+
 
