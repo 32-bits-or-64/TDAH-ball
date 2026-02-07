@@ -108,9 +108,13 @@
 
             // 5. Idiomas
             const langs = {
-                es: ["Física", "Gravedad", "Rebote", "Velocidad", "Reset", "Español"],
-                en: ["Physics", "Gravity", "Bounce", "Velocity", "Reset", "English"],
-                ja: ["物理学", "重力", "反発", "速度", "リセット", "日本語"]
+                es: ["Ajustes", "Gravedad", "Restitución", "Velocidad", "Reiniciar", "Idioma"],
+                en: ["Settings", "Gravity", "Restitution", "Velocity", "Reset", "Language"],
+                fr: ["Réglages", "Gravité", "Restitution", "Vitesse", "Réinitialiser", "Langue"],
+                de: ["Parameter", "Schwerkraft", "Stoßzahl", "Tempo", "Reset", "Sprache"],
+                ja: ["設定", "重力", "反発係数", "速度", "リセット", "言語"],
+                zh: ["设置", "重力", "恢复系数", "速度", "重置", "语言"],
+                ru: ["Настройки", "Гравитация", "Упругость", "Скорость", "Сброс", "Язык"]
             };
             const sel = document.getElementById('langSelect');
             Object.keys(langs).forEach(k => { const o = document.createElement('option'); o.value=k; o.innerText=langs[k][5]; sel.appendChild(o); });
@@ -129,3 +133,4 @@
     </script>
 </body>
 </html>
+
