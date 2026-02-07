@@ -22,20 +22,6 @@ window.onload = () => {
         pl: { name: "Polski", ui: ["Ustawienia", "Grawitacja", "Restytucja", "Prędkość", "Reset", "Język"] }
         // Se pueden añadir los 86 aquí. Los no definidos usarán 'es' o 'en' por defecto.
     };
-
-    // --- CONFIGURACIÓN DE FONDO ---
-    const bgCanvas = document.getElementById('bgCanvas');
-    const bgCtx = bgCanvas.getContext('2d');
-    function drawGrid() {
-        bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
-        const s = 60;
-        for (let y = 0; y < bgCanvas.height; y += s) {
-            for (let x = 0; x < bgCanvas.width; x += s) {
-                bgCtx.fillstyle '#111111' : '#111111';
-                bgCtx.fillRect(x, y, s, s);
-            }
-        }
-    }
     drawGrid();
     window.onresize = drawGrid;
 
@@ -130,6 +116,7 @@ window.onload = () => {
     Render.run(render);
     Runner.run(Runner.create(), engine);
 };
+
 
 
 
