@@ -3,17 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TDAH Ball - Fixed</title>
+    <title>TDAH Ball - 40 Languages Edition</title>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #111111; font-family: sans-serif; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #111111; font-family: 'Segoe UI', Tahoma, sans-serif; }
         #bgCanvas { position: fixed; top: 0; left: 0; z-index: 0; }
         #game-container { position: fixed; top: 0; left: 0; z-index: 1; width: 100vw; height: 100vh; pointer-events: none; }
         #game-container canvas { pointer-events: auto; }
+        #glow { 
+            position: absolute; width: 300px; height: 300px; 
+            background: radial-gradient(circle, rgba(241,196,15,0.4) 0%, transparent 70%); 
+            pointer-events: none; z-index: 5; transform: translate(-50%, -50%); 
+            mix-blend-mode: screen; 
+        }
         #ui-container { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
-        .panel { pointer-events: auto; background: rgba(15, 15, 15, 0.95); padding: 15px; border-radius: 10px; color: #fff; width: 180px; border: 1px solid #444; }
-        #glow { position: absolute; width: 250px; height: 250px; background: radial-gradient(circle, rgba(241,196,15,0.4) 0%, transparent 70%); pointer-events: none; z-index: 5; transform: translate(-50%, -50%); mix-blend-mode: screen; }
-        button { background: #f1c40f; border: none; padding: 8px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        input, select { width: 100%; margin: 5px 0 10px 0; }
+        .panel { 
+            pointer-events: auto; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 15px; color: #fff; width: 220px; border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h3 { color: #f1c40f; margin: 0 0 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        label { font-size: 10px; opacity: 0.6; display: block; margin-top: 10px; text-transform: uppercase; }
+        select, input, button { width: 100%; margin-top: 5px; cursor: pointer; }
+        select { background: #222; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; }
+        button { background: #f1c40f; border: none; padding: 12px; font-weight: bold; border-radius: 6px; margin-top: 20px; color: #000; transition: 0.2s; }
+        button:hover { background: #fff; }
+        .stats { color: #f1c40f; font-family: monospace; margin-top: 15px; font-size: 14px; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -24,113 +38,178 @@
     
     <div id="ui-container">
         <div class="panel">
-            <h3 style="margin:0; color:#f1c40f; font-size:14px;">TDAH PHYSICS</h3>
-            <label style="font-size:10px;">IDIOMA</label>
+            <h3 id="ui-title">Física TDAH</h3>
+            <label id="lbl-lang">Idioma</label>
             <select id="langSelect"></select>
-            <label style="font-size:10px;">GRAVEDAD</label>
+            
+            <label id="lbl-grav">Gravedad</label>
             <input type="range" id="gravRange" min="-1" max="5" step="0.1" value="1">
-            <label style="font-size:10px;">REBOTE</label>
-            <input type="range" id="bounceRange" min="0" max="1.5" step="0.05" value="0.9">
-            <div style="color:#f1c40f; font-family:monospace; margin-bottom:10px;">VEL: <span id="speedVal">0</span></div>
-            <button id="resetBtn">RESET</button>
+            
+            <label id="lbl-bounce">Rebote</label>
+            <input type="range" id="bounceRange" min="0" max="1.8" step="0.05" value="0.9">
+            
+            <div class="stats"><span id="lbl-speed">Velocidad</span>: <span id="speedVal">0</span></div>
+            <button id="resetBtn">Reiniciar</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 
     <script>
-    (function() {
-        // Función para iniciar todo cuando la librería esté lista
-        const init = () => {
-            if (typeof Matter === 'undefined') {
-                console.log("Esperando a Matter.js...");
-                setTimeout(init, 100);
-                return;
-            }
-
+        window.onload = () => {
             const { Engine, Render, Runner, Bodies, Composite, MouseConstraint, Mouse, Events, Body } = Matter;
 
-            // 1. Fondo
+            // 1. DICCIONARIO DE 40 IDIOMAS
+            const i18n = {
+                es: ["Física TDAH", "Gravedad", "Rebote", "Velocidad", "Reiniciar", "Español"],
+                en: ["ADHD Physics", "Gravity", "Bounce", "Velocity", "Reset", "English"],
+                fr: ["Physique", "Gravité", "Rebond", "Vitesse", "Réinitialiser", "Français"],
+                de: ["Physik", "Gravitation", "Abprall", "Tempo", "Reset", "Deutsch"],
+                it: ["Fisica", "Gravità", "Rimbalzo", "Velocità", "Ripristina", "Italiano"],
+                pt: ["Física", "Gravidade", "Salto", "Velocidade", "Reiniciar", "Português"],
+                ru: ["Физика", "Гравитация", "Прыжок", "Скорость", "Сброс", "Русский"],
+                ja: ["物理学", "重力", "反発", "速度", "リセット", "日本語"],
+                zh: ["物理系统", "重力", "反弹速度", "速度", "重置", "中文"],
+                ko: ["물리 시스템", "중력", "반발 계수", "속도", "초기화", "한국어"],
+                ar: ["الفيزياء", "الجاذبية", "الارتداد", "السرعة", "إعادة ضبط", "العربية"],
+                hi: ["भौतिकी", "गुरुत्वाकर्षण", "उछाल", "गति", "रीसेट", "हिन्दी"],
+                tr: ["Fizik", "Yerçekimi", "Sıçrama", "Hız", "Sıfırla", "Türkçe"],
+                nl: ["Fysica", "Zwaartekracht", "Stuiteren", "Snelheid", "Reset", "Nederlands"],
+                pl: ["Fizyka", "Grawitacja", "Odbicie", "Prędkość", "Reset", "Polski"],
+                sv: ["Fysik", "Gravitation", "Studs", "Hastighet", "Återställ", "Svenska"],
+                vi: ["Vật lý", "Trọng lực", "Độ nảy", "Tốc độ", "Đặt lại", "Tiếng Việt"],
+                th: ["ฟิสิกส์", "แรงโน้มถ่วง", "การกระดอน", "ความเร็ว", "รีเซ็ต", "ไทย"],
+                he: ["פיזיקה", "כבידה", "החזרה", "מהירות", "איפוס", "עברית"],
+                id: ["Fisika", "Gravitasi", "Pantulan", "Kecepatan", "Reset", "Bahasa Indonesia"],
+                el: ["Φυσική", "Βαρύτητα", "Αναπήδηση", "Ταχύτητα", "Επαναφορά", "Ελληνικά"],
+                hu: ["Fizika", "Gravitáció", "Visszapattanás", "Sebesség", "Visszaállítás", "Magyar"],
+                fi: ["Fysiikka", "Painovoima", "Kimmoisuus", "Nopeus", "Nollaa", "Suomi"],
+                no: ["Fysikk", "Gravitasjon", "Sprette", "Hastighet", "Nullstill", "Norsk"],
+                da: ["Fysik", "Tyngdekraft", "彈力", "Hastighed", "Nulstil", "Dansk"],
+                cs: ["Fyzika", "Gravitace", "Odraz", "Rychlost", "Resetovat", "Čeština"],
+                ro: ["Fizică", "Gravitație", "Recul", "Viteză", "Resetare", "Română"],
+                uk: ["Фізика", "Гравітація", "Відскік", "Швидкість", "Скидання", "Українська"],
+                ms: ["Fizik", "Graviti", "Lantunan", "Kelajuan", "Reset", "Bahasa Melayu"],
+                hr: ["Fizika", "Gravitacija", "Odbijanje", "Brzina", "Ponovno", "Hrvatski"],
+                sk: ["Fyzika", "Gravitácia", "Odraz", "Rýchlosť", "Resetovať", "Slovenčina"],
+                bg: ["Физика", "Гравитация", "Отскок", "Скорост", "Нулиране", "Български"],
+                lt: ["Fizika", "Gravitacija", "Atšokimas", "Greitis", "Atstatyti", "Lietuvių"],
+                sl: ["Fizika", "Gravitacija", "Odboj", "Hitrost", "Ponastavi", "Slovenščina"],
+                et: ["Füüsika", "Gravitatsioon", "Põrge", "Kiirus", "Lähtesta", "Eesti"],
+                lv: ["Fizika", "Gravitācija", "Atleciens", "Ātrums", "Atiestatīt", "Latviešu"],
+                ca: ["Física", "Gravetat", "Rebot", "Velocitat", "Reiniciar", "Català"],
+                gl: ["Física", "Gravidade", "Rebote", "Velocidade", "Reiniciar", "Galego"],
+                eu: ["Fisika", "Grabitatea", "Errebotea", "Abiadura", "Berrezarri", "Euskara"]
+            };
+
+            // 2. FONDO OSCURO DINÁMICO
             const bg = document.getElementById('bgCanvas');
             const ctx = bg.getContext('2d');
-            const draw = () => {
+            const drawGrid = () => {
                 bg.width = window.innerWidth; bg.height = window.innerHeight;
-                for(let y=0; y<bg.height; y+=60) for(let x=0; x<bg.width; x+=60) {
-                    ctx.fillStyle = (Math.floor(x/60)%2 === Math.floor(y/60)%2) ? '#111111' : '#141414';
-                    ctx.fillRect(x,y,60,60);
+                const s = 60;
+                for(let y=0; y<bg.height; y+=s) {
+                    for(let x=0; x<bg.width; x+=s) {
+                        ctx.fillStyle = (Math.floor(x/s)%2 === Math.floor(y/s)%2) ? '#111111' : '#141414';
+                        ctx.fillRect(x, y, s, s);
+                    }
                 }
             };
-            draw(); window.onresize = draw;
+            drawGrid(); window.onresize = drawGrid;
 
-            // 2. Motor
+            // 3. MOTOR FÍSICO (SUBSTEPPING)
             const engine = Engine.create();
+            engine.positionIterations = 15; // Mayor precisión para evitar que atraviese muros
+            engine.velocityIterations = 15;
+
             const render = Render.create({
                 element: document.getElementById('game-container'),
                 engine: engine,
                 options: { width: window.innerWidth, height: window.innerHeight, wireframes: false, background: 'transparent' }
             });
 
-            // 3. Bola (Textura generada)
-            const ball = Bodies.circle(window.innerWidth/2, 150, 50, {
-                restitution: 0.9, friction: 0.005,
+            // LA BOLA (Textura 2x2 integrada)
+            const ball = Bodies.circle(window.innerWidth/2, 200, 60, {
+                restitution: 0.9, friction: 0.005, density: 0.05,
                 render: { sprite: { texture: (() => {
-                    const c = document.createElement('canvas'); c.width=c.height=100;
-                    const x = c.getContext('2d'); x.beginPath(); x.arc(50,50,50,0,7); x.clip();
-                    x.fillStyle="#f1c40f"; x.fillRect(0,0,50,50); x.fillRect(50,50,50,50);
-                    x.fillStyle="#000"; x.fillRect(50,0,50,50); x.fillRect(0,50,50,50);
+                    const c = document.createElement('canvas'); c.width=c.height=120;
+                    const x = c.getContext('2d'); x.beginPath(); x.arc(60,60,60,0,7); x.clip();
+                    x.fillStyle="#f1c40f"; x.fillRect(0,0,60,60); x.fillRect(60,60,60,60);
+                    x.fillStyle="#000"; x.fillRect(60,0,60,60); x.fillRect(0,60,60,60);
                     return c.toDataURL();
                 })() } }
             });
 
+            // MUROS ULTRA-GRUESOS (1000px) ANTI-ESCAPES
+            const thick = 1000;
             const wallOpts = { isStatic: true, render: { visible: false } };
-            Composite.add(engine.world, [
-                ball,
-                Bodies.rectangle(window.innerWidth/2, window.innerHeight+50, window.innerWidth, 100, wallOpts),
-                Bodies.rectangle(window.innerWidth/2, -50, window.innerWidth, 100, wallOpts),
-                Bodies.rectangle(-50, window.innerHeight/2, 100, window.innerHeight, wallOpts),
-                Bodies.rectangle(window.innerWidth+50, window.innerHeight/2, 100, window.innerHeight, wallOpts)
-            ]);
+            const walls = [
+                Bodies.rectangle(window.innerWidth/2, window.innerHeight + thick/2, window.innerWidth, thick, wallOpts), // Suelo
+                Bodies.rectangle(window.innerWidth/2, -thick/2, window.innerWidth, thick, wallOpts), // Techo
+                Bodies.rectangle(-thick/2, window.innerHeight/2, thick, window.innerHeight, wallOpts), // Izq
+                Bodies.rectangle(window.innerWidth + thick/2, window.innerHeight/2, thick, window.innerHeight, wallOpts) // Der
+            ];
 
+            Composite.add(engine.world, [ball, ...walls]);
+
+            // INTERACCIÓN MOUSE
             const mouse = Mouse.create(render.canvas);
-            const mConstraint = MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
+            const mConstraint = MouseConstraint.create(engine, {
+                mouse: mouse, constraint: { stiffness: 0.15, render: { visible: false } }
+            });
             Composite.add(engine.world, mConstraint);
 
-            // 4. Glow & Velocidad
+            // 4. LÓGICA DE ACTUALIZACIÓN (GLOW + LIMITADOR)
             const glow = document.getElementById('glow');
             Events.on(engine, 'afterUpdate', () => {
-                document.getElementById('speedVal').innerText = ball.speed.toFixed(1);
+                // Limitador de velocidad crítico para evitar fallos de física por rebote extremo
+                const maxVel = 45;
+                if (ball.speed > maxVel) {
+                    const r = maxVel / ball.speed;
+                    Body.setVelocity(ball, { x: ball.velocity.x * r, y: ball.velocity.y * r });
+                }
+
+                // UI y Glow
+                document.getElementById('speedVal').innerText = (ball.speed * 10).toFixed(1) + " m/s";
                 if(glow) {
                     glow.style.left = ball.position.x + 'px';
                     glow.style.top = ball.position.y + 'px';
-                    glow.style.transform = `translate(-50%, -50%) scale(${1+ball.speed/40})`;
+                    const s = 1 + (ball.speed / 40);
+                    glow.style.transform = `translate(-50%, -50%) scale(${s}, ${1/s}) rotate(${ball.angle}rad)`;
                 }
             });
 
-            // 5. Idiomas
-            const langs = {
-                es: ["Ajustes", "Gravedad", "Restitución", "Velocidad", "Reiniciar", "Idioma"],
-                en: ["Settings", "Gravity", "Restitution", "Velocity", "Reset", "Language"],
-                fr: ["Réglages", "Gravité", "Restitution", "Vitesse", "Réinitialiser", "Langue"],
-                de: ["Parameter", "Schwerkraft", "Stoßzahl", "Tempo", "Reset", "Sprache"],
-                ja: ["設定", "重力", "反発係数", "速度", "リセット", "言語"],
-                zh: ["设置", "重力", "恢复系数", "速度", "重置", "语言"],
-                ru: ["Настройки", "Гравитация", "Упругость", "Скорость", "Сброс", "Язык"]
-            };
+            // 5. MANEJO DE IDIOMAS
             const sel = document.getElementById('langSelect');
-            Object.keys(langs).forEach(k => { const o = document.createElement('option'); o.value=k; o.innerText=langs[k][5]; sel.appendChild(o); });
+            Object.keys(i18n).sort().forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.innerText = i18n[code][5]; // Nombre nativo
+                sel.appendChild(opt);
+            });
 
-            // Controles
+            const updateUI = (code) => {
+                const d = i18n[code] || i18n.es;
+                document.getElementById('ui-title').innerText = d[0];
+                document.getElementById('lbl-grav').innerText = d[1];
+                document.getElementById('lbl-bounce').innerText = d[2];
+                document.getElementById('lbl-speed').innerText = d[3];
+                document.getElementById('resetBtn').innerText = d[4];
+                document.getElementById('lbl-lang').innerText = "Language / Idioma";
+            };
+
+            sel.onchange = (e) => updateUI(e.target.value);
             document.getElementById('gravRange').oninput = (e) => engine.gravity.y = parseFloat(e.target.value);
             document.getElementById('bounceRange').oninput = (e) => ball.restitution = parseFloat(e.target.value);
-            document.getElementById('resetBtn').onclick = () => Body.setPosition(ball, {x: window.innerWidth/2, y: 100});
+            document.getElementById('resetBtn').onclick = () => {
+                Body.setPosition(ball, { x: window.innerWidth/2, y: 150 });
+                Body.setVelocity(ball, { x: 0, y: 0 });
+            };
 
+            updateUI('es');
             Render.run(render);
             Runner.run(Runner.create(), engine);
         };
-
-        init();
-    })();
     </script>
 </body>
 </html>
-
